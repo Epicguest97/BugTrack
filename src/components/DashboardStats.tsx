@@ -1,19 +1,6 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-interface Issue {
-  id: string;
-  title: string;
-  description: string;
-  status: 'open' | 'in-progress' | 'resolved' | 'closed';
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  assignee?: string;
-  reporter: string;
-  labels: string[];
-  createdAt: string;
-  updatedAt: string;
-}
+import { Issue } from '@/types/Issue';
 
 interface DashboardStatsProps {
   issues: Issue[];

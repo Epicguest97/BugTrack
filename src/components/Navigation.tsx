@@ -51,10 +51,10 @@ export const Navigation = () => {
                   Code
                 </button>
                 <button
-                  onClick={() => navigate('/wiki')}
+                  onClick={() => navigate('/integrations')}
                   className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium hover:border-b-2 hover:border-gray-300"
                 >
-                  Wiki
+                  Integrations
                 </button>
               </div>
             </div>

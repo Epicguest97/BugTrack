@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Home, List, GitPullRequest, Folder, BookOpen } from 'lucide-react';
+import { Home, List, GitPullRequest, Folder, Settings } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -13,7 +12,7 @@ const Index = () => {
     { icon: List, label: 'Issues', active: false, path: '/issues' },
     { icon: GitPullRequest, label: 'Pull Requests', active: false, path: '/pull-requests' },
     { icon: Folder, label: 'Projects', active: false, path: '/projects' },
-    { icon: BookOpen, label: 'Wiki', active: false, path: '/wiki' },
+    { icon: Settings, label: 'Integrations', active: false, path: '/integrations' },
   ];
 
   const recentActivity = [

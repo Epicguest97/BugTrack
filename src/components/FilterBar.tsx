@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,25 +11,14 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
-
-interface Issue {
-  id: string;
-  title: string;
-  description: string;
-  status: 'open' | 'in-progress' | 'resolved' | 'closed';
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  assignee?: string;
-  reporter: string;
-  labels: string[];
-  createdAt: string;
-  updatedAt: string;
-}
+import { Issue } from '@/types/Issue';
 
 interface FilterBarProps {
   onFilter: (filters: {
     status?: string;
     priority?: string;
     assignee?: string;
+    project?: string;
     search?: string;
   }) => void;
   issues: Issue[];
@@ -41,11 +29,16 @@ export const FilterBar = ({ onFilter, issues }: FilterBarProps) => {
     status: 'all',
     priority: 'all',
     assignee: 'all',
+    project: 'all',
     search: ''
   });
 
   const uniqueAssignees = Array.from(
     new Set(issues.map(issue => issue.assignee).filter(Boolean))
+  );
+
+  const uniqueProjects = Array.from(
+    new Set(issues.map(issue => issue.project).filter(Boolean))
   );
 
   const handleFilterChange = (key: string, value: string) => {
@@ -59,6 +52,7 @@ export const FilterBar = ({ onFilter, issues }: FilterBarProps) => {
       status: 'all',
       priority: 'all',
       assignee: 'all',
+      project: 'all',
       search: ''
     };
     setFilters(clearedFilters);
@@ -68,7 +62,7 @@ export const FilterBar = ({ onFilter, issues }: FilterBarProps) => {
   return (
     <Card>
       <CardContent className="pt-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="space-y-2">
             <Label htmlFor="search">Search</Label>
             <div className="relative">
@@ -81,6 +75,26 @@ export const FilterBar = ({ onFilter, issues }: FilterBarProps) => {
                 className="pl-10"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="project">Project</Label>
+            <Select
+              value={filters.project}
+              onValueChange={(value) => handleFilterChange('project', value)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Projects</SelectItem>
+                {uniqueProjects.map(project => (
+                  <SelectItem key={project} value={project!}>
+                    {project}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
