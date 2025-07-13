@@ -4,38 +4,51 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AppSidebar } from "@/components/layout/AppSidebar";
+import { ThemeProvider } from "@/components/theme-provider";
 import Index from "./pages/Index";
-import Issues from "./pages/Issues";
-import IssueDetail from "./pages/IssueDetail";
-import CreateIssue from "./pages/CreateIssue";
-import Projects from "./pages/Projects";
-import ProjectDetail from "./pages/ProjectDetail";
-import PullRequests from "./pages/PullRequests";
-import Integrations from "./pages/Integrations";
+import AllProjects from "./pages/AllProjects";
+import ProjectLayout from "./pages/ProjectLayout";
+import ProjectSummary from "./pages/ProjectSummary";
+import ProjectBacklog from "./pages/ProjectBacklog";
+import ProjectBoard from "./pages/ProjectBoard";
+import ProjectTimeline from "./pages/ProjectTimeline";
+import Settings from "./pages/Settings";
+import ApiTest from "./pages/ApiTest";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/projects/:id" element={<ProjectDetail />} />
-          <Route path="/issues" element={<Issues />} />
-          <Route path="/issues/new" element={<CreateIssue />} />
-          <Route path="/issues/:id" element={<IssueDetail />} />
-          <Route path="/pull-requests" element={<PullRequests />} />
-          <Route path="/integrations" element={<Integrations />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <div className="flex h-screen bg-background overflow-hidden">
+            <AppSidebar />
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <main className="flex-1 overflow-y-auto">
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/projects" element={<AllProjects />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/api-test" element={<ApiTest />} />
+                  <Route path="/project/:projectId" element={<ProjectLayout />}>
+                    <Route index element={<ProjectSummary />} />
+                    <Route path="backlog" element={<ProjectBacklog />} />
+                    <Route path="board" element={<ProjectBoard />} />
+                    <Route path="timeline" element={<ProjectTimeline />} />
+                  </Route>
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </main>
+            </div>
+          </div>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

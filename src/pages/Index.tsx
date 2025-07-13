@@ -1,173 +1,75 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Layout } from '@/components/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Home, List, GitPullRequest, Folder, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { mockProjects } from '@/data/mockData';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Bug, FolderOpen, Plus, ArrowRight } from 'lucide-react';
 
 const Index = () => {
-  const navigate = useNavigate();
-
-  const sidebarItems = [
-    { icon: Home, label: 'Overview', active: true, path: '/' },
-    { icon: List, label: 'Issues', active: false, path: '/issues' },
-    { icon: GitPullRequest, label: 'Pull Requests', active: false, path: '/pull-requests' },
-    { icon: Folder, label: 'Projects', active: false, path: '/projects' },
-    { icon: Settings, label: 'Integrations', active: false, path: '/integrations' },
-  ];
-
-  const recentActivity = [
-    {
-      id: 123,
-      title: 'Fix login bug',
-      author: 'Alex',
-      date: '2023-09-20',
-      status: 'Opened'
-    },
-    {
-      id: 124,
-      title: 'Update documentation',
-      author: 'Sarah',
-      date: '2023-09-19',
-      status: 'Closed'
-    },
-    {
-      id: 125,
-      title: 'Implement new feature',
-      author: 'David',
-      date: '2023-09-18',
-      status: 'Opened'
-    }
-  ];
-
-  const teamActivity = [
-    {
-      author: 'Alex',
-      action: 'opened issue #123',
-      date: '2023-09-20'
-    },
-    {
-      author: 'Sarah',
-      action: 'closed issue #124',
-      date: '2023-09-19'
-    },
-    {
-      author: 'David',
-      action: 'opened issue #125',
-      date: '2023-09-18'
-    }
-  ];
+  const recentProjects = mockProjects.slice(0, 3);
 
   return (
-    <Layout>
-      <div className="flex min-h-screen bg-gray-50">
-        {/* Sidebar */}
-        <div className="w-64 bg-white border-r border-gray-200">
-          <div className="p-4">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Acme Co</h2>
-            <nav className="space-y-1">
-              {sidebarItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.label}
-                    onClick={() => navigate(item.path)}
-                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                      item.active
-                        ? 'bg-gray-100 text-gray-900'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4 mr-3" />
-                    {item.label}
-                  </button>
-                );
-              })}
-            </nav>
+    <div className="p-6">
+      <div className="max-w-6xl mx-auto">
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Bug className="h-8 w-8 text-primary" />
+            <h1 className="text-4xl font-bold text-foreground">IssueTracker</h1>
+          </div>
+          <p className="text-xl text-muted-foreground mb-8">
+            Minimalistic bug tracking for small teams
+          </p>
+          <div className="flex items-center justify-center gap-4">
+            <Link to="/projects">
+              <Button size="lg">
+                <FolderOpen className="h-5 w-5 mr-2" />
+                View All Projects
+              </Button>
+            </Link>
+            <Button size="lg" variant="outline">
+              <Plus className="h-5 w-5 mr-2" />
+              Create Project
+            </Button>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 p-8">
-          <div className="max-w-4xl">
-            {/* Header */}
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Overview</h1>
-              <p className="text-gray-600">Manage and track your work across all your projects</p>
-            </div>
+        {/* Recent Projects */}
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold text-foreground">Recent Projects</h2>
+            <Link to="/projects" className="flex items-center gap-1 text-primary hover:underline">
+              View all
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
 
-            {/* Recent Activity */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent activity</h2>
-              <div className="space-y-3">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-gray-200 rounded flex-shrink-0 mt-1"></div>
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        Issue #{activity.id}: {activity.title}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {activity.status} by {activity.author} on {activity.date}
-                      </div>
-                    </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {recentProjects.map((project) => (
+              <Card key={project.id} className="p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded bg-primary text-primary-foreground flex items-center justify-center">
+                    <FolderOpen className="h-5 w-5" />
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Issues Summary */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Issues</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="bg-white border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
-                      onClick={() => navigate('/issues')}>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-gray-600">
-                      Open issues
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-gray-900">15</div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
-                      onClick={() => navigate('/issues')}>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-gray-600">
-                      Closed issues
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-gray-900">30</div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-
-            {/* Team Activity */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Team activity</h2>
-              <div className="space-y-3">
-                {teamActivity.map((activity, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-gray-200 rounded flex-shrink-0 mt-1"></div>
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        {activity.author} {activity.action}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {activity.date}
-                      </div>
-                    </div>
+                  
+                  <div className="flex-1">
+                    <h3 className="font-medium text-foreground mb-2">{project.name}</h3>
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                      {project.description}
+                    </p>
+                    
+                    <Link to={`/project/${project.id}`}>
+                      <Button size="sm" variant="outline" className="w-full">
+                        Open Project
+                      </Button>
+                    </Link>
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
+              </Card>
+            ))}
           </div>
         </div>
       </div>
-    </Layout>
+    </div>
   );
 };
 

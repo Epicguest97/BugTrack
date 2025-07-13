@@ -2,39 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
+/* Jira-inspired design system with professional blue theme */
 
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 218 11% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 218 11% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 218 11% 12%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 218 100% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 215 20% 96%;
+    --secondary-foreground: 218 11% 12%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 215 20% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 215 20% 96%;
+    --accent-foreground: 218 11% 12%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 215 20% 88%;
+    --input: 215 20% 88%;
+    --ring: 218 100% 50%;
 
     --radius: 0.5rem;
+
+    /* Status colors */
+    --status-todo: 272 46% 53%;
+    --status-progress: 218 100% 50%;
+    --status-review: 45 93% 47%;
+    --status-done: 142 76% 36%;
+
+    /* Chart colors */
+    --chart-1: 272 46% 53%;
+    --chart-2: 218 100% 50%;
+    --chart-3: 45 93% 47%;
+    --chart-4: 142 76% 36%;
+
+    --sidebar-background: 215 25% 97%;
+    --sidebar-foreground: 218 11% 15%;
+    --sidebar-border: 215 20% 88%;
+
+    --activity-background: 215 25% 97%;
 
     --sidebar-background: 0 0% 98%;
 
