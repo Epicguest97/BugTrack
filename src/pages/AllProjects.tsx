@@ -7,19 +7,30 @@ import { ProjectDialog } from '@/components/projects/ProjectDialog';
 import { Plus, FolderOpen, Loader2 } from 'lucide-react';
 import { useProjects } from '@/hooks/useApi';
 import { useToast } from '@/hooks/use-toast';
+import { useEffect } from 'react';
 
 export default function AllProjects() {
-  const { projects, loading, error, createProject } = useProjects();
+  const { projects, loading, error, createProject, refetch } = useProjects();
   const { toast } = useToast();
+
+  // Additional useEffect to ensure data is fresh when component mounts
+  useEffect(() => {
+    console.log('AllProjects: Component mounted, ensuring fresh data...');
+    refetch();
+  }, [refetch]);
 
   const handleCreateProject = async (projectData: { name: string }) => {
     try {
+      console.log('AllProjects: Creating project with data:', projectData);
       await createProject(projectData);
       toast({
         title: "Success",
         description: "Project created successfully",
       });
+      // Refetch to ensure we have the latest data
+      await refetch();
     } catch (error) {
+      console.error('AllProjects: Error creating project:', error);
       toast({
         title: "Error",
         description: "Failed to create project",
@@ -42,13 +53,15 @@ export default function AllProjects() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <p className="text-red-500 mb-2">Error: {error}</p>
-          <Button onClick={() => window.location.reload()}>
+          <Button onClick={() => refetch()}>
             Retry
           </Button>
         </div>
       </div>
     );
   }
+
+  console.log('AllProjects: Rendering with projects:', projects);
 
   return (
     <div className="p-6">

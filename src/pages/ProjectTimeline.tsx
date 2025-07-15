@@ -1,20 +1,36 @@
+
 import { useParams } from 'react-router-dom';
-import { useState } from 'react';
-import { mockIssues, mockUsers } from '@/data/mockData';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, ChevronLeft, ChevronRight, Info } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { useIssues } from '@/hooks/useApi';
+import { mockUsers } from '@/data/mockData';
+import { useToast } from '@/hooks/use-toast';
 
 type ViewMode = 'Days' | 'Weeks' | 'Months' | 'Quarters';
 
 export default function ProjectTimeline() {
   const { projectId } = useParams();
+  const { issues: allIssues, loading, error, refetch } = useIssues();
   const [viewMode, setViewMode] = useState<ViewMode>('Weeks');
   const [currentDate, setCurrentDate] = useState(new Date());
-  
-  const issues = mockIssues.filter(issue => issue.projectId === projectId);
+  const { toast } = useToast();
+
+  // Additional useEffect to ensure fresh data when projectId changes
+  useEffect(() => {
+    console.log('ProjectTimeline: Project changed or component mounted, ensuring fresh data...');
+    refetch();
+  }, [projectId, refetch]);
+
+  console.log('ProjectTimeline - All issues:', allIssues);
+  console.log('ProjectTimeline - Current projectId:', projectId);
+
+  // Filter issues for this project
+  const issues = allIssues.filter(issue => issue.projectId === projectId);
+  console.log('ProjectTimeline - Filtered issues for project:', issues);
 
   // Generate calendar dates based on view mode
   const generateCalendarDates = () => {
@@ -120,8 +136,34 @@ export default function ProjectTimeline() {
   };
 
   const getIssueBarStyle = (issue: any) => {
-    const startDate = issue.createdAt;
-    const endDate = issue.dueDate || new Date(startDate.getTime() + 14 * 24 * 60 * 60 * 1000);
+    // Use createdAt as start date and calculate end date based on status
+    const startDate = new Date(issue.createdAt);
+    let endDate: Date;
+    
+    if (issue.dueDate) {
+      endDate = new Date(issue.dueDate);
+    } else {
+      // Calculate estimated end date based on status
+      const daysSinceCreated = Math.floor((new Date().getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      let estimatedDuration = 14; // default 2 weeks
+      
+      switch (issue.status) {
+        case 'DONE':
+          estimatedDuration = Math.max(daysSinceCreated, 1);
+          break;
+        case 'IN_REVIEW':
+          estimatedDuration = Math.max(daysSinceCreated + 2, 7);
+          break;
+        case 'IN_PROGRESS':
+          estimatedDuration = Math.max(daysSinceCreated + 5, 10);
+          break;
+        case 'TO_DO':
+          estimatedDuration = 14;
+          break;
+      }
+      
+      endDate = new Date(startDate.getTime() + estimatedDuration * 24 * 60 * 60 * 1000);
+    }
     
     const timelineStart = calendarDates[0];
     const timelineEnd = calendarDates[calendarDates.length - 1];
@@ -137,12 +179,35 @@ export default function ProjectTimeline() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'done': return 'bg-green-500';
-      case 'review': return 'bg-blue-500';
-      case 'progress': return 'bg-yellow-500';
+      case 'DONE': return 'bg-green-500';
+      case 'IN_REVIEW': return 'bg-blue-500';
+      case 'IN_PROGRESS': return 'bg-yellow-500';
+      case 'TO_DO': return 'bg-gray-400';
       default: return 'bg-gray-400';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading timeline...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-500 mb-2">Error: {error}</p>
+          <Button onClick={() => refetch()}>
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-background">
@@ -188,7 +253,7 @@ export default function ProjectTimeline() {
       <div className="flex">
         {/* Left sidebar */}
         <div className="w-80 pr-4 border-r border-border">
-          <h3 className="font-mono font-semibold text-foreground mb-4 uppercase tracking-wide">Sprints</h3>
+          <h3 className="font-mono font-semibold text-foreground mb-4 uppercase tracking-wide">Issues</h3>
           
           <div className="space-y-2">
             {issues.map((issue) => {
@@ -200,19 +265,28 @@ export default function ProjectTimeline() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <Badge variant="outline" className="text-xs font-mono">
-                        #{issue.id}
+                        #{issue.id.slice(-6)}
                       </Badge>
                       <span className="text-sm font-medium truncate">
                         {issue.title}
                       </span>
-                      {issue.status === 'DONE' && (
-                        <Badge variant="secondary" className="text-xs bg-green-100 text-green-800 font-mono">
-                          DONE
-                        </Badge>
-                      )}
+                      <Badge 
+                        variant="secondary" 
+                        className={`text-xs font-mono ${
+                          issue.status === 'DONE' ? 'bg-green-100 text-green-800' :
+                          issue.status === 'IN_REVIEW' ? 'bg-blue-100 text-blue-800' :
+                          issue.status === 'IN_PROGRESS' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {issue.status.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground font-mono">
+                      Started: {new Date(issue.createdAt).toLocaleDateString()}
                     </div>
                     {issue.status !== 'TO_DO' && (
-                      <div className="w-full bg-muted rounded-full h-1">
+                      <div className="w-full bg-muted rounded-full h-1 mt-1">
                         <div 
                           className={`h-1 rounded-full ${getStatusColor(issue.status)}`}
                           style={{ 
@@ -233,13 +307,11 @@ export default function ProjectTimeline() {
             })}
           </div>
 
-          <Button
-            variant="ghost"
-            className="w-full justify-start gap-2 mt-4 text-muted-foreground font-mono"
-          >
-            <Plus className="h-4 w-4" />
-            Create Epic
-          </Button>
+          {issues.length === 0 && (
+            <div className="text-center text-muted-foreground py-8">
+              <p className="font-mono text-sm">No issues found for this project</p>
+            </div>
+          )}
         </div>
 
         {/* Timeline view */}
@@ -300,11 +372,17 @@ export default function ProjectTimeline() {
                   <div
                     className={`absolute h-6 rounded ${getStatusColor(issue.status)} opacity-80 hover:opacity-100 transition-opacity cursor-pointer`}
                     style={style}
-                    title={`${issue.title} - ${issue.status}`}
+                    title={`${issue.title} - ${issue.status} (Started: ${new Date(issue.createdAt).toLocaleDateString()})`}
                   />
                 </div>
               );
             })}
+            
+            {issues.length === 0 && (
+              <div className="text-center text-muted-foreground py-8">
+                <p className="font-mono text-sm">No issues to display in timeline</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

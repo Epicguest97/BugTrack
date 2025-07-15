@@ -1,3 +1,4 @@
+
 const issueService = require('../services/issues.services');
 
 exports.getAllIssues = async (req, res, next) => {
@@ -32,9 +33,12 @@ exports.getIssueById = async (req, res, next) => {
 
 exports.updateIssue = async (req, res, next) => {
   try {
+    console.log('Controller: Updating issue', req.params.id, 'with data:', req.body);
     const issue = await issueService.update(req.params.id, req.body);
+    console.log('Controller: Issue updated successfully:', issue);
     res.json(issue);
   } catch (err) {
+    console.error('Controller: Error updating issue:', err);
     next(err);
   }
 };

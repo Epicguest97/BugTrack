@@ -1,5 +1,5 @@
 // Use deployed backend
-const API_BASE_URL = 'https://scrummy-bug-tracker.onrender.com/api';
+const API_BASE_URL = 'http://localhost:3000/api'; // Make sure this matches your backend port
 
 // Helper function to handle API responses
 const handleResponse = async (response: Response) => {
@@ -19,6 +19,7 @@ const handleResponse = async (response: Response) => {
 // Helper function to make API requests
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
+  
   const config: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
@@ -28,7 +29,18 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   };
 
   const response = await fetch(url, config);
-  return handleResponse(response);
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Network error' }));
+    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+  }
+  
+  // Handle 204 No Content responses (like delete operations)
+  if (response.status === 204) {
+    return null;
+  }
+  
+  return response.json();
 };
 
 // Issue API methods
@@ -39,7 +51,7 @@ export const issueApi = {
   // Get issue by ID
   getById: (id: string) => apiRequest(`/issues/${id}`),
   
-  // Create new issue
+  // Create new issue - FIX: Change from `/issues/${projectId}` to `/issues/${projectId}`
   create: (projectId: string, issueData: {
     title: string;
     description?: string;
@@ -53,7 +65,7 @@ export const issueApi = {
   update: (id: string, issueData: Partial<{
     title: string;
     description: string;
-    status: 'TO_DO' | 'IN_PROGRESS' | 'IN_REVIEW' | 'DONE';
+    status: 'TO_DO' | 'IN_PROGRESS' | 'IN_PROGRESS' | 'DONE';
   }>) => apiRequest(`/issues/${id}`, {
     method: 'PUT',
     body: JSON.stringify(issueData),

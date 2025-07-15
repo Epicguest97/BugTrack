@@ -1,16 +1,18 @@
 
-import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { mockIssues, mockUsers } from '@/data/mockData';
+import { useState, useEffect } from 'react';
+import { mockUsers } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Search, Filter, MoreHorizontal, MessageSquare, ChevronRight, Bug, Settings, Plus } from 'lucide-react';
+import { Search, Filter, MoreHorizontal, MessageSquare, ChevronRight, Bug, Settings, Plus, Loader2 } from 'lucide-react';
 import { IssueDialog } from '@/components/issues/IssueDialog';
-import { Issue } from '@/types';
+import { Issue, IssueStatus } from '@/types';
+import { useIssues } from '@/hooks/useApi';
+import { useToast } from '@/hooks/use-toast';
 
 const issueTypeIcons = {
   bug: Bug,
@@ -19,51 +21,102 @@ const issueTypeIcons = {
 };
 
 const statusColors = {
-  todo: 'bg-slate-100 text-slate-800',
-  progress: 'bg-blue-100 text-blue-800',
-  review: 'bg-yellow-100 text-yellow-800',
-  done: 'bg-green-100 text-green-800'
+  TO_DO: 'bg-slate-100 text-slate-800',
+  IN_PROGRESS: 'bg-blue-100 text-blue-800',
+  IN_REVIEW: 'bg-yellow-100 text-yellow-800',
+  DONE: 'bg-green-100 text-green-800'
 };
 
 const statusLabels = {
-  todo: 'TO DO',
-  progress: 'IN PROGRESS',
-  review: 'IN REVIEW',
-  done: 'DONE'
+  TO_DO: 'TO DO',
+  IN_PROGRESS: 'IN PROGRESS',
+  IN_REVIEW: 'IN REVIEW',
+  DONE: 'DONE'
 };
 
 export default function ProjectBacklog() {
   const { projectId } = useParams();
-  const [issues, setIssues] = useState(mockIssues.filter(issue => issue.projectId === projectId));
+  const { issues: allIssues, loading, error, createIssue, updateIssue, refetch } = useIssues();
   const [searchTerm, setSearchTerm] = useState('');
+  const { toast } = useToast();
+
+  // Additional useEffect to ensure fresh data when projectId changes
+  useEffect(() => {
+    console.log('ProjectBacklog: Project changed or component mounted, ensuring fresh data...');
+    refetch();
+  }, [projectId, refetch]);
+
+  console.log('ProjectBacklog - All issues:', allIssues);
+  console.log('ProjectBacklog - Current projectId:', projectId);
+
+  // Filter issues for this project
+  const issues = allIssues.filter(issue => issue.projectId === projectId);
+  console.log('ProjectBacklog - Filtered issues for project:', issues);
 
   const filteredIssues = issues.filter(issue =>
     issue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    issue.description.toLowerCase().includes(searchTerm.toLowerCase())
+    (issue.description && issue.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleSaveIssue = (issueData: Partial<Issue>) => {
-    if (issueData.id && issues.find(i => i.id === issueData.id)) {
-      // Update existing issue
-      setIssues(prev => prev.map(issue => 
-        issue.id === issueData.id ? { ...issue, ...issueData } as Issue : issue
-      ));
-    } else {
-      // Create new issue
-      const newIssue: Issue = {
-        id: issueData.id!,
-        title: issueData.title!,
-        description: issueData.description!,
-        status: issueData.status!,
-        priority: issueData.priority!,
-        projectId: issueData.projectId!,
-        assigneeId: issueData.assigneeId,
-        createdAt: issueData.createdAt!,
-        updatedAt: issueData.updatedAt!,
-      };
-      setIssues(prev => [...prev, newIssue]);
+  const handleCreateIssue = async (projectId: string, data: { title: string; description?: string; status?: IssueStatus }) => {
+    try {
+      console.log('ProjectBacklog: Creating issue for project via API:', projectId, 'with data:', data);
+      await createIssue(projectId, data);
+      toast({
+        title: "Success",
+        description: "Issue created successfully",
+      });
+      // Refetch to ensure we have the latest data
+      await refetch();
+    } catch (error) {
+      console.error('ProjectBacklog: Error creating issue:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create issue",
+        variant: "destructive",
+      });
     }
   };
+
+  const handleUpdateIssue = async (id: string, data: Partial<Issue>) => {
+    try {
+      console.log('ProjectBacklog: Updating issue via API:', id, 'with data:', data);
+      await updateIssue(id, data);
+      toast({
+        title: "Success",
+        description: "Issue updated successfully",
+      });
+    } catch (error) {
+      console.error('ProjectBacklog: Error updating issue:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update issue",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading issues...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-500 mb-2">Error: {error}</p>
+          <Button onClick={() => refetch()}>
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-background min-h-screen">
@@ -141,7 +194,7 @@ export default function ProjectBacklog() {
                   </TableCell>
                   <TableCell>
                     <span className="font-mono text-sm font-medium">
-                      BTS-{issue.id}
+                      BTS-{issue.id.slice(-6)}
                     </span>
                   </TableCell>
                   <TableCell className="max-w-md">
@@ -179,7 +232,7 @@ export default function ProjectBacklog() {
                     <IssueDialog 
                       issue={issue} 
                       projectId={projectId!}
-                      onSave={handleSaveIssue}
+                      onUpdate={handleUpdateIssue}
                     />
                   </TableCell>
                 </TableRow>
@@ -193,7 +246,7 @@ export default function ProjectBacklog() {
       <div className="mt-4">
         <IssueDialog 
           projectId={projectId!} 
-          onSave={handleSaveIssue}
+          onCreate={handleCreateIssue}
           trigger={
             <Button variant="ghost" className="text-muted-foreground font-mono">
               <Plus className="h-4 w-4 mr-2" />

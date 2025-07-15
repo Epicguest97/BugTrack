@@ -1,5 +1,6 @@
+
 import { useParams } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,16 +20,32 @@ const columns: { status: IssueStatus; title: string; color: string }[] = [
 
 export default function ProjectBoard() {
   const { projectId } = useParams();
-  const { issues: allIssues, loading, error, createIssue, updateIssue } = useIssues();
+  const { issues: allIssues, loading, error, createIssue, updateIssue, refetch } = useIssues();
   const [draggedIssue, setDraggedIssue] = useState<Issue | null>(null);
   const { toast } = useToast();
 
+  // useEffect to ensure fresh data when projectId changes
+  useEffect(() => {
+    console.log('ProjectBoard: Project changed or component mounted, refetching data...');
+    if (projectId) {
+      refetch();
+    }
+  }, [projectId, refetch]);
+
+  // useEffect to log current issues state
+  useEffect(() => {
+    console.log('ProjectBoard - All issues updated:', allIssues);
+    console.log('ProjectBoard - Current projectId:', projectId);
+  }, [allIssues, projectId]);
+
   // Filter issues for this project
   const issues = allIssues.filter(issue => issue.projectId === projectId);
+  console.log('ProjectBoard - Filtered issues for project:', issues);
 
   const handleDragStart = (e: React.DragEvent, issue: Issue) => {
     setDraggedIssue(issue);
     e.dataTransfer.effectAllowed = 'move';
+    console.log('ProjectBoard: Starting drag for issue:', issue.id, 'current status:', issue.status);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -40,12 +57,25 @@ export default function ProjectBoard() {
     e.preventDefault();
     if (draggedIssue && draggedIssue.status !== newStatus) {
       try {
-        await updateIssue(draggedIssue.id, { status: newStatus });
+        console.log('ProjectBoard: Making PUT request to update issue status:', draggedIssue.id, 'from', draggedIssue.status, 'to', newStatus);
+        
+        // Make PUT request to update issue status
+        const updatedIssue = await updateIssue(draggedIssue.id, { status: newStatus });
+        console.log('ProjectBoard: Issue status updated successfully:', updatedIssue);
+        
         toast({
           title: "Success",
           description: `Issue moved to ${newStatus.replace('_', ' ').toLowerCase()}`,
         });
+        
+        // Refetch to ensure we have the latest data from backend
+        setTimeout(() => {
+          console.log('ProjectBoard: Refetching data after status update...');
+          refetch();
+        }, 500);
+        
       } catch (error) {
+        console.error('ProjectBoard: Error updating issue status:', error);
         toast({
           title: "Error",
           description: "Failed to update issue status",
@@ -57,11 +87,55 @@ export default function ProjectBoard() {
   };
 
   const handleCreateIssue = async (projectId: string, data: { title: string; description?: string; status?: IssueStatus }) => {
-    await createIssue(projectId, data);
+    try {
+      console.log('ProjectBoard: Creating issue for project via POST API:', projectId, 'with data:', data);
+      const newIssue = await createIssue(projectId, data);
+      console.log('ProjectBoard: Issue created successfully:', newIssue);
+      
+      toast({
+        title: "Success", 
+        description: "Issue created successfully",
+      });
+      
+      // Refetch to ensure we have the latest data
+      setTimeout(() => {
+        console.log('ProjectBoard: Refetching data after issue creation...');
+        refetch();
+      }, 500);
+      
+    } catch (error) {
+      console.error('ProjectBoard: Error creating issue:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create issue",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleUpdateIssue = async (id: string, data: Partial<Issue>) => {
-    await updateIssue(id, data);
+    try {
+      console.log('ProjectBoard: Updating issue via PUT API:', id, 'with data:', data);
+      await updateIssue(id, data);
+      toast({
+        title: "Success",
+        description: "Issue updated successfully", 
+      });
+      
+      // Refetch to ensure we have the latest data
+      setTimeout(() => {
+        console.log('ProjectBoard: Refetching data after issue update...');
+        refetch();
+      }, 500);
+      
+    } catch (error) {
+      console.error('ProjectBoard: Error updating issue:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update issue",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -78,7 +152,7 @@ export default function ProjectBoard() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <p className="text-red-500 mb-2">Error: {error}</p>
-          <Button onClick={() => window.location.reload()}>
+          <Button onClick={() => refetch()}>
             Retry
           </Button>
         </div>
